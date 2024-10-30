@@ -1,4 +1,4 @@
-# NEOCITIESWM
+# NeocitiesWM - Neocities Window Manager
 
 ## Usage
 
