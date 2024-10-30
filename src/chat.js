@@ -81,10 +81,62 @@ export default class ChatWindow extends Window {
     inputContainer.appendChild(this.messageInput);
     inputContainer.appendChild(sendButton);
     container.appendChild(inputContainer);
+
+    // Add emoji button next to the send button
+    const emojiButton = document.createElement('button');
+    emojiButton.textContent = '😊';
+    emojiButton.style.cssText = `
+      padding: 8px 16px;
+      margin-right: 8px;
+      background: #f0f0f0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    `;
+
+    emojiButton.onclick = () => this.emit('toggleEmojis', this);
+    inputContainer.insertBefore(emojiButton, inputContainer.lastChild);
+
+    // Store reference to input for emoji insertion
+    this.messageInput = inputContainer.querySelector('textarea');
+  }
+
+  toggleEmojiSelector() {
+    if (!this.emojiSelector) {
+      // Position it next to the chat window
+      const chatRect = this.element.getBoundingClientRect();
+      this.emojiSelector.x = chatRect.right + 10;
+      this.emojiSelector.y = chatRect.top;
+      this.emojiSelector.updatePosition();
+
+      // Handle emoji selection
+      this.emojiSelector.registerCallback('emojiSelected', ({ emoji }) => {
+        // Insert emoji at cursor position or at end
+        const input = this.messageInput;
+        const start = input.selectionStart;
+        const end = input.selectionEnd;
+        const text = input.value;
+
+        input.value = text.substring(0, start) + emoji + text.substring(end);
+        input.focus();
+        input.selectionStart = input.selectionEnd = start + emoji.length;
+      });
+
+      // Clean up reference when emoji selector is closed
+      this.emojiSelector.registerCallback('close', () => {
+        this.emojiSelector = null;
+      });
+    } else {
+      // If already open, close it
+      this.emojiSelector.emit('close');
+      this.emojiSelector = null;
+    }
   }
 
   connectWebSocket() {
-    this.ws = new WebSocket('YOUR SOCKET HERE');
+    this.ws = new WebSocket('wss://courselab.lnu.se/message-app/socket');
+
     this.ws.onopen = () => {
       this.addSystemMessage('Connected to chat server');
     };
@@ -155,7 +207,7 @@ export default class ChatWindow extends Window {
       data: text,
       username: ChatWindow.getUsername(),
       channel: this.channel,
-      key: '',
+      key: 'eDBE76deU7L0H9mEBgxUKVR0VCnq0XBd',
     };
 
     this.ws.send(JSON.stringify(message));

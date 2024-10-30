@@ -1,5 +1,6 @@
 import Window from './window.js';
 import ChatWindow from './chat.js';
+import EmojiSelector from './emojiselector.js';
 
 export default class Environment {
   constructor(autoRestore = false) {
@@ -38,10 +39,19 @@ export default class Environment {
     }
 
     let window = null;
-    if (WindowClass === ChatWindow) {
-      window = new ChatWindow(id, width, height, 'default', savedState);
-    } else {
-      window = new WindowClass(id, title, content, width, height, savedState);
+
+    switch (WindowClass) {
+      case ChatWindow:
+        window = new ChatWindow(id, width, height, 'default', savedState);
+        break;
+
+      case EmojiSelector:
+        window = new EmojiSelector(id, savedState);
+        break;
+      case null:
+      case Window:
+      default:
+        window = new Window(id, title, content, width, height, savedState);
     }
 
     // Set up event listeners
@@ -51,6 +61,7 @@ export default class Environment {
     window.on('minimize', () => this.saveState());
     window.on('drag', () => this.saveState());
     window.on('dragEnd', () => this.saveState());
+    window.on('toggleEmojis', () => this.toggleEmojis(window));
 
     this.windows.set(window.id, window);
     document.body.appendChild(window.element);
@@ -58,6 +69,22 @@ export default class Environment {
     this.saveState();
 
     return window;
+  }
+
+  toggleEmojis(window) {
+    if (!window.emojiSelector) {
+      window.emojiSelector = this.createWindow(
+        `emoji-${this.id}`,
+        '',
+        '',
+        300,
+        400,
+        null,
+        EmojiSelector
+      );
+    } else {
+      
+    }
   }
 
   removeWindow(window) {

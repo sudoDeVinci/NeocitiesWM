@@ -1,18 +1,9 @@
 // Event emitter for window events
 class WindowEventEmitter {
   constructor() {
-    /**
-     * @type {Object.<string, Function[]>}
-     * @description Stores event listeners for different events.
-     */
     this.listeners = {};
   }
 
-  /**
-   * Registers an event listener for a specific event.
-   * @param {string} event - The name of the event.
-   * @param {Function} callback - The callback function to be executed when the event is emitted.
-   */
   on(event, callback) {
     if (!this.listeners[event]) {
       this.listeners[event] = [];
@@ -20,11 +11,6 @@ class WindowEventEmitter {
     this.listeners[event].push(callback);
   }
 
-  /**
-   * Emits an event, calling all registered listeners with the provided data.
-   * @param {string} event - The name of the event.
-   * @param {*} data - The data to be passed to the event listeners.
-   */
   emit(event, data) {
     if (this.listeners[event]) {
       this.listeners[event].forEach(callback => callback(data));
@@ -33,21 +19,6 @@ class WindowEventEmitter {
 }
 
 export default class Window extends WindowEventEmitter {
-  /**
-   * Creates a new Window instance.
-   * @param {string} id - The unique identifier for the window.
-   * @param {string} title - The title of the window.
-   * @param {string} content - The content of the window.
-   * @param {number} [width=400] - The width of the window.
-   * @param {number} [height=300] - The height of the window.
-   * @param {Object} [savedState=null] - The saved state of the window.
-   * @param {number} [savedState.width] - The saved width of the window.
-   * @param {number} [savedState.height] - The saved height of the window.
-   * @param {number} [savedState.x] - The saved x-coordinate of the window.
-   * @param {number} [savedState.y] - The saved y-coordinate of the window.
-   * @param {boolean} [savedState.isMinimized] - The saved minimized state of the window.
-   * @param {number} [savedState.zIndex] - The saved z-index of the window.
-   */
   constructor(
     id,
     title,
@@ -69,7 +40,6 @@ export default class Window extends WindowEventEmitter {
       this.isMinimized = savedState.isMinimized;
       this.zIndex = savedState.zIndex;
     } else {
-      // Default values if no saved state is provided
       this.width = width;
       this.height = height;
       this.x = Math.min(
@@ -81,7 +51,6 @@ export default class Window extends WindowEventEmitter {
         window.innerHeight - height
       );
       this.isMinimized = false;
-      this.zIndex = 1;
     }
 
     // Initialize drag state
@@ -230,48 +199,16 @@ export default class Window extends WindowEventEmitter {
     this.emit('minimize', this);
   }
 
-  /**
-   * Minimizes the window.
-   */
   minimize() {
     this.isMinimized = true;
     this.element.style.height = '37px';
     this.contentArea.style.display = 'none';
-    this.emit('minimize', this);
   }
 
-  /**
-   * Restores the window from a minimized state.
-   */
   restore() {
     this.isMinimized = false;
     this.element.style.height = `${this.height}px`;
     this.contentArea.style.display = 'block';
-    this.emit('restore', this);
-  }
-
-  /**
-   * Moves the window to a new position.
-   * @param {number} x - The new x-coordinate of the window.
-   * @param {number} y - The new y-coordinate of the window.
-   */
-  move(x, y) {
-    this.x = x;
-    this.y = y;
-    this.updatePosition();
-    this.emit('move', { x, y });
-  }
-
-  /**
-   * Resizes the window.
-   * @param {number} width - The new width of the window.
-   * @param {number} height - The new height of the window.
-   */
-  resize(width, height) {
-    this.width = width;
-    this.height = height;
-    this.updatePosition();
-    this.emit('resize', { width, height });
   }
 
   updatePosition() {
@@ -279,32 +216,9 @@ export default class Window extends WindowEventEmitter {
     this.element.style.top = `${this.y}px`;
   }
 
-  /**
-   * Sets the z-index of the window.
-   * @param {number} zIndex - The new z-index of the window.
-   */
-  setZIndex(zIndex) {
-    this.zIndex = zIndex;
-    this.element.style.zIndex = zIndex;
-    this.emit('zIndexChange', zIndex);
-  }
-
-  /**
-   * Saves the current state of the window.
-   * @returns {Object} The current state of the window.
-   */
-  saveState() {
-    return {
-      id: this.id,
-      title: this.title,
-      content: this.content,
-      width: this.width,
-      height: this.height,
-      x: this.x,
-      y: this.y,
-      isMinimized: this.isMinimized,
-      zIndex: this.zIndex,
-    };
+  setZIndex(index) {
+    this.zIndex = index;
+    this.element.style.zIndex = index;
   }
 
   getState() {
