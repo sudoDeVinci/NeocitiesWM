@@ -82,8 +82,12 @@ export default class Environment {
         null,
         EmojiSelector
       );
-    } else {
       
+      window.initEmojiSelector();
+    } else {
+       // If already open, close it
+      window.emojiSelector.emit('close');
+      window.emojiSelector = null;
     }
   }
 

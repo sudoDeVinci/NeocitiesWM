@@ -1,6 +1,7 @@
-import Environment from './environment.js';
+import Environment from './environment.js'
 import ChatWindow from './chat.js';
 import Window from './window.js';
+
 
 // Clear any existing state if needed
 localStorage.removeItem('windowEnvironmentState');

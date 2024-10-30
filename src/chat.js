@@ -102,36 +102,32 @@ export default class ChatWindow extends Window {
     this.messageInput = inputContainer.querySelector('textarea');
   }
 
-  toggleEmojiSelector() {
-    if (!this.emojiSelector) {
-      // Position it next to the chat window
-      const chatRect = this.element.getBoundingClientRect();
-      this.emojiSelector.x = chatRect.right + 10;
-      this.emojiSelector.y = chatRect.top;
-      this.emojiSelector.updatePosition();
+  initEmojiSelector() {
+    if (!this.emojiSelector) return;
+    
+    // Position it next to the chat window
+    const chatRect = this.element.getBoundingClientRect();
+    this.emojiSelector.x = chatRect.right + 10;
+    this.emojiSelector.y = chatRect.top;
+    this.emojiSelector.updatePosition();
 
-      // Handle emoji selection
-      this.emojiSelector.registerCallback('emojiSelected', ({ emoji }) => {
-        // Insert emoji at cursor position or at end
-        const input = this.messageInput;
-        const start = input.selectionStart;
-        const end = input.selectionEnd;
-        const text = input.value;
+    // Handle emoji selection
+    this.emojiSelector.registerCallback('emojiSelected', ({ emoji }) => {
+      // Insert emoji at cursor position or at end
+      const input = this.messageInput;
+      const start = input.selectionStart;
+      const end = input.selectionEnd;
+      const text = input.value;
 
-        input.value = text.substring(0, start) + emoji + text.substring(end);
-        input.focus();
-        input.selectionStart = input.selectionEnd = start + emoji.length;
-      });
+      input.value = text.substring(0, start) + emoji + text.substring(end);
+      input.focus();
+      input.selectionStart = input.selectionEnd = start + emoji.length;
+    });
 
-      // Clean up reference when emoji selector is closed
-      this.emojiSelector.registerCallback('close', () => {
-        this.emojiSelector = null;
-      });
-    } else {
-      // If already open, close it
-      this.emojiSelector.emit('close');
+    // Clean up reference when emoji selector is closed
+    this.emojiSelector.registerCallback('close', () => {
       this.emojiSelector = null;
-    }
+    });
   }
 
   connectWebSocket() {
