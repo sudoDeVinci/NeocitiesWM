@@ -8,6 +8,10 @@ export default class Environment {
     this.zIndexBase = 1000;
     this.currentlyDragging = null;
 
+    // Page Environment Container
+    this.environment = document.createElement('div');
+    this.environment.id = 'window-environment';
+
     // Taskbar DOM element
     this.taskbar = document.createElement('div');
     this.taskbar.id = 'taskbar';
@@ -16,7 +20,7 @@ export default class Environment {
     this.addDefaultTaskbarIcons();
 
     // Append taskbar to the document
-    document.body.appendChild(this.taskbar);
+    //document.body.appendChild(this.taskbar);
 
     // Bind methods
     this.onMouseMove = this.onMouseMove.bind(this);
@@ -31,6 +35,11 @@ export default class Environment {
     if (autoRestore && localStorage.getItem('windowEnvironmentState')) {
       this.restoreState();
     }
+
+    // Append environment to the document
+    document.body.appendChild(this.environment);
+    // Append taskbar to the environment container
+    this.environment.appendChild(this.taskbar);
   }
 
   // Add default icons to taskbar
@@ -104,7 +113,7 @@ export default class Environment {
     window.on('dragEnd', () => this.saveState());
 
     this.windows.set(window.id, window);
-    document.body.appendChild(window.element);
+    this.environment.appendChild(window.element);
     this.updateZIndices();
     this.saveState();
 
@@ -135,6 +144,7 @@ export default class Environment {
     if (this.windows.has(window.id)) {
       window.destroy();
       this.windows.delete(window.id);
+      this.environment.removeChild(window.element);
       this.updateZIndices();
       this.saveState();
     }
