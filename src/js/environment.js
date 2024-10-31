@@ -8,6 +8,16 @@ export default class Environment {
     this.zIndexBase = 1000;
     this.currentlyDragging = null;
 
+    // Taskbar DOM element
+    this.taskbar = document.createElement('div');
+    this.taskbar.id = 'taskbar';
+
+    // Add default icons
+    this.addDefaultTaskbarIcons();
+
+    // Append taskbar to the document
+    document.body.appendChild(this.taskbar);
+
     // Bind methods
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
@@ -21,6 +31,35 @@ export default class Environment {
     if (autoRestore && localStorage.getItem('windowEnvironmentState')) {
       this.restoreState();
     }
+  }
+
+  // Add default icons to taskbar
+  addDefaultTaskbarIcons() {
+    const defaultApps = [
+        { id: 'chat', title: 'Chat' , type: ChatWindow, height: 600, width: 300},
+        { id: 'browser', title: 'Browser' , type: Window, height: 600, width: 800},
+    ];
+
+    defaultApps.forEach(app => {
+        const icon = this.createTaskbarIcon(app.id, app.title, app.type, app.height, app.width);
+        this.taskbar.appendChild(icon);
+    });
+
+    // Add "Add" button
+    const addButton = document.createElement('div');
+    addButton.className = 'taskbar-item add-app';
+    addButton.textContent = '+';
+    //addButton.onclick = () => this.addAppPrompt(); // Open a prompt to add new apps
+    this.taskbar.appendChild(addButton);
+  }
+
+  // Helper to create taskbar icons
+  createTaskbarIcon(id, title, type, width, height) {
+    const taskbarItem = document.createElement('div');
+    taskbarItem.className = 'taskbar-item';
+    taskbarItem.textContent = title;
+    taskbarItem.onclick = () => this.createWindow(id, title, '', height, width, null, type);
+    return taskbarItem;
   }
 
   createWindow(
@@ -48,6 +87,7 @@ export default class Environment {
       case EmojiSelector:
         window = new EmojiSelector(id, savedState);
         break;
+        
       case null:
       case Window:
       default:
@@ -58,10 +98,10 @@ export default class Environment {
     window.on('close', () => this.removeWindow(window));
     window.on('focus', () => this.bringToFront(window));
     window.on('dragStart', () => this.startDragging(window));
+    window.on('toggleEmojis', () => this.toggleEmojis(window));
     window.on('minimize', () => this.saveState());
     window.on('drag', () => this.saveState());
     window.on('dragEnd', () => this.saveState());
-    window.on('toggleEmojis', () => this.toggleEmojis(window));
 
     this.windows.set(window.id, window);
     document.body.appendChild(window.element);
@@ -157,11 +197,6 @@ export default class Environment {
         for (const windowState of state.windows) {
           // Import the appropriate window class based on the saved className
           let WindowClass = Window; // Default to base Window class
-          if (windowState.className === 'ChatWindow') {
-            const { default: ChatWindow } = await import('./chat.js');
-            WindowClass = ChatWindow;
-          }
-
           this.createWindow(
             windowState.id,
             windowState.title,

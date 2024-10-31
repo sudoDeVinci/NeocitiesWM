@@ -10,12 +10,35 @@ export default class ChatWindow extends Window {
   ) {
     const title = `Chat - ${channel}`;
     const content = '<div class="chat-container"></div>';
-    super(id, title, content, width, height, savedState);
+    super(id, title, content, 320, 600, savedState);
+
+    // Add custom font for code blocks
+    const fontLink = document.createElement('link');
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap';
+    fontLink.rel = 'stylesheet';
+    document.head.appendChild(fontLink);
 
     this.channel = channel;
-    this.messages = [];
+    this.messages = this.loadCachedMessages() || [];
     this.setupChatUI();
     this.connectWebSocket();
+  }
+
+  loadCachedMessages() {
+    const key = `chat-messages-${this.channel}`;
+    const cached = localStorage.getItem(key);
+    return cached ? JSON.parse(cached) : null;
+  }
+
+  saveCachedMessages() {
+    // Filter out system messages and only keep user messages
+    const userMessages = this.messages.filter(message => 
+      message.type === 'message' && message.username !== 'System'
+    );
+    
+    const key = `chat-messages-${this.channel}`;
+    // Keep last 50 user messages
+    localStorage.setItem(key, JSON.stringify(userMessages.slice(-50)));
   }
 
   setupChatUI() {
@@ -23,7 +46,11 @@ export default class ChatWindow extends Window {
     container.style.cssText = `
       display: flex;
       flex-direction: column;
-      height: 100%;
+      max-height: 600px;
+      max-width: 300px;
+      width:100%;
+      overflow-y: auto;
+      overflow-x: hidden;
     `;
 
     // Message history container
@@ -31,9 +58,12 @@ export default class ChatWindow extends Window {
     this.messageContainer.style.cssText = `
       flex: 1;
       overflow-y: auto;
+      overflow-x: hidden;
       padding: 10px;
       background: #f9f9f9;
       margin-bottom: 10px;
+      max-height: 350px;
+      max-width: 300px;
     `;
     container.appendChild(this.messageContainer);
 
@@ -48,12 +78,14 @@ export default class ChatWindow extends Window {
 
     this.messageInput = document.createElement('textarea');
     this.messageInput.style.cssText = `
-      width: 100%;
       padding: 8px;
       border: 1px solid #ddd;
       border-radius: 4px;
       resize: none;
       margin-bottom: 8px;
+      max-height: 300px;
+      max-width: 250px;
+      width: 100%;
     `;
     this.messageInput.placeholder = 'Type your message...';
     this.messageInput.rows = 3;
@@ -100,7 +132,111 @@ export default class ChatWindow extends Window {
 
     // Store reference to input for emoji insertion
     this.messageInput = inputContainer.querySelector('textarea');
+    
+    container.scrollTop = container.scrollHeight;
   }
+
+  parseMessageContent(text) {
+    const fragments = [];
+    let currentIndex = 0;
+    const codeBlockRegex = /```([\s\S]*?)```/g;
+    
+    let match;
+    while ((match = codeBlockRegex.exec(text)) !== null) {
+      // Add text before code block
+      if (match.index > currentIndex) {
+        fragments.push({
+          type: 'text',
+          content: text.slice(currentIndex, match.index)
+        });
+      }
+      
+      // Add code block
+      fragments.push({
+        type: 'code',
+        content: match[1].trim()
+      });
+      
+      currentIndex = match.index + match[0].length;
+    }
+    
+    // Add remaining text
+    if (currentIndex < text.length) {
+      fragments.push({
+        type: 'text',
+        content: text.slice(currentIndex)
+      });
+    }
+    
+    return fragments;
+  }
+
+  displayMessage(message) {
+    const messageElement = document.createElement('div');
+    messageElement.style.cssText = `
+      margin-bottom: 10px;
+      padding: 8px;
+      border-radius: 4px;
+      background: ${
+        message.username === ChatWindow.getUsername() ? '#e3f2fd' : 'white'
+      };
+      border: 1px solid #ddd;
+    `;
+
+    const header = document.createElement('div');
+    header.style.cssText = `
+      padding: 4px 8px;
+      max-width: 180px;
+      overflow-x: hidden;
+      font-weight: bold;
+      margin-bottom: 4px;
+      color: #666;
+    `;
+    header.textContent = message.username;
+    messageElement.appendChild(header);
+
+    const content = document.createElement('div');
+    const fragments = this.parseMessageContent(message.data);
+    
+    fragments.forEach(fragment => {
+      const element = document.createElement('div');
+      if (fragment.type === 'code') {
+        element.style.cssText = `
+          font-family: 'Fira Code', monospace;
+          font-size: 0.95em;
+          line-height: 1.4;
+          white-space: pre-wrap;
+          background: #1e1e1e;
+          color: #d4d4d4;
+          padding: 12px;
+          border-radius: 6px;
+          margin: 8px 0;
+          border-left: 4px solid #007acc;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          tab-size: 2;
+          -moz-tab-size: 2;
+        `;
+      } else {
+        element.style.cssText = `
+          margin: 4px 0;
+          line-height: 1.5;
+          max-width: 215px;
+          overflow-x: hidden;
+          overflow-wrap: break-word;
+        `;
+      }
+      element.textContent = fragment.content;
+      content.appendChild(element);
+    });
+
+    messageElement.appendChild(content);
+    this.messageContainer.appendChild(messageElement);
+    this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
+    const container = this.element.querySelector('.chat-container');
+    container.scrollTop = container.scrollHeight;
+  }
+
+
 
   initEmojiSelector() {
     if (!this.emojiSelector) return;
@@ -112,7 +248,7 @@ export default class ChatWindow extends Window {
     this.emojiSelector.updatePosition();
 
     // Handle emoji selection
-    this.emojiSelector.registerCallback('emojiSelected', ({ emoji }) => {
+    this.emojiSelector.on('emojiSelected', ({ emoji }) => {
       // Insert emoji at cursor position or at end
       const input = this.messageInput;
       const start = input.selectionStart;
@@ -123,15 +259,10 @@ export default class ChatWindow extends Window {
       input.focus();
       input.selectionStart = input.selectionEnd = start + emoji.length;
     });
-
-    // Clean up reference when emoji selector is closed
-    this.emojiSelector.registerCallback('close', () => {
-      this.emojiSelector = null;
-    });
   }
 
   connectWebSocket() {
-    this.ws = new WebSocket('wss://courselab.lnu.se/message-app/socket');
+    this.ws = new WebSocket('');
 
     this.ws.onopen = () => {
       this.addSystemMessage('Connected to chat server');
@@ -153,36 +284,14 @@ export default class ChatWindow extends Window {
 
   addMessage(message) {
     this.messages.push(message);
-    if (this.messages.length > 20) {
+    if (this.messages.length > 50) {
       this.messages.shift();
     }
-
-    const messageElement = document.createElement('div');
-    messageElement.style.cssText = `
-      margin-bottom: 10px;
-      padding: 8px;
-      border-radius: 4px;
-      background: ${
-        message.username === ChatWindow.getUsername() ? '#e3f2fd' : 'white'
-      };
-      border: 1px solid #ddd;
-    `;
-
-    const header = document.createElement('div');
-    header.style.cssText = `
-      font-weight: bold;
-      margin-bottom: 4px;
-      color: #666;
-    `;
-    header.textContent = message.username;
-
-    const content = document.createElement('div');
-    content.textContent = message.data;
-
-    messageElement.appendChild(header);
-    messageElement.appendChild(content);
-    this.messageContainer.appendChild(messageElement);
-    this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
+    // Only save to cache if it's a user message
+    if (message.type === 'message' && message.username !== 'System') {
+      this.saveCachedMessages();
+    }
+    this.displayMessage(message);
   }
 
   addSystemMessage(text) {
@@ -203,7 +312,7 @@ export default class ChatWindow extends Window {
       data: text,
       username: ChatWindow.getUsername(),
       channel: this.channel,
-      key: 'eDBE76deU7L0H9mEBgxUKVR0VCnq0XBd',
+      key: '',
     };
 
     this.ws.send(JSON.stringify(message));

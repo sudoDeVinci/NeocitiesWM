@@ -19,6 +19,14 @@ class WindowEventEmitter {
 }
 
 export default class Window extends WindowEventEmitter {
+  /**
+   * @param {string} id 
+   * @param {string} title 
+   * @param {string} content 
+   * @param {number} width 
+   * @param {number} height 
+   * @param {object} savedState 
+   */
   constructor(
     id,
     title,
@@ -94,6 +102,7 @@ export default class Window extends WindowEventEmitter {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        height: 40px;
       `;
 
     const titleText = document.createElement('div');
@@ -109,6 +118,8 @@ export default class Window extends WindowEventEmitter {
         border: none;
         background: none;
         font-size: 20px;
+        font-weight: bolder;
+        font-color: white;
         cursor: pointer;
         padding: 0 5px;
         margin-right: 5px;
@@ -163,6 +174,11 @@ export default class Window extends WindowEventEmitter {
     this.emit('dragStart', this);
   }
 
+  /**
+   * 
+   * @param {Event} event 
+   * @returns 
+   */
   drag(event) {
     if (!this.isDragging) return;
 

@@ -2,7 +2,7 @@ import Window from './window.js';
 
 export default class EmojiSelector extends Window {
   constructor(id, savedState = null) {
-    super(id, 'Emoji Selector', '', 300, 400, savedState);
+    super(id, 'Emoji Selector', '', 400, 450, savedState);
 
     // Common emoji categories with sample emojis
     this.categories = {
@@ -95,6 +95,9 @@ export default class EmojiSelector extends Window {
   }
 
   setupUI() {
+    this.element.style.overflowY = 'hidden';
+    this.contentArea.style.overflowY = 'hidden';
+
     const container = document.createElement('div');
     container.style.cssText = `
       padding: 10px;
@@ -122,6 +125,7 @@ export default class EmojiSelector extends Window {
       border: 1px solid #ddd;
       border-radius: 4px;
       margin-bottom: 10px;
+      max-width: 325px;
     `;
 
     searchContainer.appendChild(searchInput);
@@ -166,7 +170,8 @@ export default class EmojiSelector extends Window {
         `;
 
         emojiButton.onclick = () => {
-          this.trigger('emojiSelected', { emoji });
+          //this.trigger('emojiSelected', { emoji });
+          this.emit('emojiSelected', {emoji});
         };
 
         emojiGrid.appendChild(emojiButton);
