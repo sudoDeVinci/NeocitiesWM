@@ -50,14 +50,16 @@ export default class Window extends WindowEventEmitter {
     } else {
       this.width = width;
       this.height = height;
+
       this.x = Math.min(
-        Math.max(0, Math.random() * (window.innerWidth - width)),
-        window.innerWidth - width
+        Math.max(0, Math.random() * (window.innerWidth - width - 100)),
+        window.innerWidth - width - 100
       );
       this.y = Math.min(
-        Math.max(0, Math.random() * (window.innerHeight - height)),
-        window.innerHeight - height
+        Math.max(50, Math.random() * (window.innerHeight - height - 100)),
+        window.innerHeight - height - 100
       );
+      
       this.isMinimized = false;
     }
 
@@ -70,9 +72,22 @@ export default class Window extends WindowEventEmitter {
 
     this.createElement();
 
+    // Adjust initial positioning to ensure it's within viewport
+    this.x = Math.min(
+      Math.max(0, this.x),
+      Math.max(0, window.innerWidth - width)
+    );
+    this.y = Math.min(
+      Math.max(0, this.y),
+      Math.max(0, window.innerHeight - height)
+    );
+
     if (this.isMinimized) {
       this.minimize();
     }
+
+    // Add resize event listener
+    window.addEventListener('resize', this.handleResize.bind(this));
   }
 
   createElement() {
@@ -95,7 +110,8 @@ export default class Window extends WindowEventEmitter {
     this.titleBar.className = 'window-title-bar';
     this.titleBar.style.cssText = `
         padding: 8px;
-        background: #f5f5f5;
+        background-color: #333;
+        color: white;
         border-bottom: 1px solid #ddd;
         cursor: move;
         user-select: none;
@@ -119,7 +135,7 @@ export default class Window extends WindowEventEmitter {
         background: none;
         font-size: 20px;
         font-weight: bolder;
-        font-color: white;
+        color: white;
         cursor: pointer;
         padding: 0 5px;
         margin-right: 5px;
@@ -136,8 +152,11 @@ export default class Window extends WindowEventEmitter {
         border: none;
         background: none;
         font-size: 20px;
+        font-weight: bolder;
+        color: white;
         cursor: pointer;
         padding: 0 5px;
+        margin-right: 5px;
       `;
     closeButton.onclick = e => {
       e.stopPropagation();
@@ -163,6 +182,20 @@ export default class Window extends WindowEventEmitter {
     this.element.appendChild(this.contentArea);
 
     this.element.onclick = () => this.emit('focus', this);
+  }
+
+  // New method to handle window repositioning on resize
+  handleResize() {
+    // Ensure the window stays within the new viewport boundaries
+    const maxX = Math.max(0, window.innerWidth - this.width);
+    const maxY = Math.max(0, window.innerHeight - this.height);
+
+    // Adjust x and y coordinates if they're now out of bounds
+    this.x = Math.min(this.x, maxX);
+    this.y = Math.min(this.y, maxY);
+
+    // Update the window's position
+    this.updatePosition();
   }
 
   startDrag(event) {
@@ -217,14 +250,12 @@ export default class Window extends WindowEventEmitter {
 
   minimize() {
     this.isMinimized = true;
-    this.element.style.height = '37px';
-    this.contentArea.style.display = 'none';
+    this.element.style.display = 'none';
   }
 
   restore() {
     this.isMinimized = false;
-    this.element.style.height = `${this.height}px`;
-    this.contentArea.style.display = 'block';
+    this.element.style.display = 'block';
   }
 
   updatePosition() {

@@ -180,6 +180,7 @@ export default class EmojiSelector extends Window {
       categoryContainer.appendChild(categoryTitle);
       categoryContainer.appendChild(emojiGrid);
       container.appendChild(categoryContainer);
+      searchInput.focus();
     });
 
     // Implement search functionality

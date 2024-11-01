@@ -5,12 +5,26 @@ import EmojiSelector from './emojiselector.js';
 export default class Environment {
   constructor(autoRestore = false) {
     this.windows = new Map();
+    this.icons = new Map();
     this.zIndexBase = 1000;
     this.currentlyDragging = null;
+
+    // Add custom font for code blocks
+    const fontLink = document.createElement('link');
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap';
+    fontLink.rel = 'stylesheet';
+    document.head.appendChild(fontLink);
 
     // Page Environment Container
     this.environment = document.createElement('div');
     this.environment.id = 'window-environment';
+    this.environment.style.cssText = `
+      dsplay: inline-block;
+      width: 100vw;
+      max-width: 100vw;
+      height: 100vh;
+      max-height: 100vh;
+      `;
 
     // Taskbar DOM element
     this.taskbar = document.createElement('div');
@@ -45,30 +59,72 @@ export default class Environment {
   // Add default icons to taskbar
   addDefaultTaskbarIcons() {
     const defaultApps = [
-        { id: 'chat', title: 'Chat' , type: ChatWindow, height: 600, width: 300},
-        { id: 'browser', title: 'Browser' , type: Window, height: 600, width: 800},
+        { title: 'Chat' , type: ChatWindow, height: 600, width: 300},
+        { title: 'Browser' , type: Window, height: 600, width: 800}
     ];
 
     defaultApps.forEach(app => {
-        const icon = this.createTaskbarIcon(app.id, app.title, app.type, app.height, app.width);
+        const icon = this.createTaskbarIcon(app.title, app.type, app.width, app.height);
         this.taskbar.appendChild(icon);
     });
 
     // Add "Add" button
-    const addButton = document.createElement('div');
-    addButton.className = 'taskbar-item add-app';
-    addButton.textContent = '+';
+    const addButton1 = document.createElement('div');
+    const addButton2 = document.createElement('div');
+    const addButton3 = document.createElement('div');
+    addButton1.className = 'taskbar-item add-app';
+    addButton2.className = 'taskbar-item add-app';
+    addButton3.className = 'taskbar-item add-app';
+    addButton1.textContent = '+';
+    addButton2.textContent = '+';
+    addButton3.textContent = '+';
     //addButton.onclick = () => this.addAppPrompt(); // Open a prompt to add new apps
-    this.taskbar.appendChild(addButton);
+    this.taskbar.appendChild(addButton1);
+    this.taskbar.appendChild(addButton2);
+    this.taskbar.appendChild(addButton3);
   }
 
   // Helper to create taskbar icons
-  createTaskbarIcon(id, title, type, width, height) {
+  createTaskbarIcon(title, type, width, height) {
     const taskbarItem = document.createElement('div');
     taskbarItem.className = 'taskbar-item';
     taskbarItem.textContent = title;
-    taskbarItem.onclick = () => this.createWindow(id, title, '', height, width, null, type);
+    taskbarItem.onclick = () => this.newWindow(title, '', width, height, null, type);
     return taskbarItem;
+  }
+
+  //Pin open windows to the taskbar
+  pinWindow(window) {
+    const taskbarItem = document.createElement('div');
+    taskbarItem.className = 'taskbar-item';
+    taskbarItem.textContent = window.title;
+    taskbarItem.onclick = () => window.toggleMinimize();
+    this.taskbar.appendChild(taskbarItem);
+    this.icons.set(window.id, taskbarItem);
+  }
+
+  removeWindow(window) {
+    if (this.windows.has(window.id)) {
+      this.windows.delete(window.id);
+      this.environment.removeChild(window.element);
+
+      this.taskbar.removeChild(this.icons.get(window.id));
+      this.icons.delete(window.id);
+
+      window.destroy();
+      
+      this.updateZIndices();
+      this.saveState();
+    }
+  }
+
+  // Helper to create windows
+  newWindow(title, content, width, height, savedState, WindowClass) {
+    const window = this.createWindow(crypto.randomUUID(), title, content, width, height, savedState, WindowClass);
+    this.pinWindow(window);
+    this.bringToFront(window);
+    this.updateZIndices();
+    this.saveState();
   }
 
   createWindow(
@@ -133,20 +189,11 @@ export default class Environment {
       );
       
       window.initEmojiSelector();
+      this.bringToFront(window.emojiSelector);
     } else {
        // If already open, close it
       window.emojiSelector.emit('close');
       window.emojiSelector = null;
-    }
-  }
-
-  removeWindow(window) {
-    if (this.windows.has(window.id)) {
-      window.destroy();
-      this.windows.delete(window.id);
-      this.environment.removeChild(window.element);
-      this.updateZIndices();
-      this.saveState();
     }
   }
 
@@ -206,7 +253,7 @@ export default class Environment {
         const state = JSON.parse(savedState);
         for (const windowState of state.windows) {
           // Import the appropriate window class based on the saved className
-          let WindowClass = Window; // Default to base Window class
+          let WindowClass = windowState.className; // Default to base Window class
           this.createWindow(
             windowState.id,
             windowState.title,

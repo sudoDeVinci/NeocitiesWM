@@ -12,12 +12,6 @@ export default class ChatWindow extends Window {
     const content = '<div class="chat-container"></div>';
     super(id, title, content, 320, 600, savedState);
 
-    // Add custom font for code blocks
-    const fontLink = document.createElement('link');
-    fontLink.href = 'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap';
-    fontLink.rel = 'stylesheet';
-    document.head.appendChild(fontLink);
-
     this.channel = channel;
     this.messages = this.loadCachedMessages() || [];
     this.setupChatUI();
@@ -245,7 +239,7 @@ export default class ChatWindow extends Window {
     const chatRect = this.element.getBoundingClientRect();
     this.emojiSelector.x = chatRect.right + 10;
     this.emojiSelector.y = chatRect.top;
-    this.emojiSelector.updatePosition();
+    //this.emojiSelector.updatePosition();
 
     // Handle emoji selection
     this.emojiSelector.on('emojiSelected', ({ emoji }) => {
@@ -259,10 +253,13 @@ export default class ChatWindow extends Window {
       input.focus();
       input.selectionStart = input.selectionEnd = start + emoji.length;
     });
+
+    this.emojiSelector.handleResize();
+    // this.emojiSelector.emit('focus', this.emojiSelector);
   }
 
   connectWebSocket() {
-    this.ws = new WebSocket('');
+    this.ws = new WebSocket('wss://courselab.lnu.se/message-app/socket');
 
     this.ws.onopen = () => {
       this.addSystemMessage('Connected to chat server');
@@ -312,7 +309,7 @@ export default class ChatWindow extends Window {
       data: text,
       username: ChatWindow.getUsername(),
       channel: this.channel,
-      key: '',
+      key: 'eDBE76deU7L0H9mEBgxUKVR0VCnq0XBd',
     };
 
     this.ws.send(JSON.stringify(message));

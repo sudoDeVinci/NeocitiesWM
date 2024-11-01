@@ -42,3 +42,13 @@ body {
 .taskbar-item:hover {
     background-color: #444;
 }
+
+.taskbar-item {
+    font-family: 'Fira Code', monospace;
+    font-size: 1.2rem;
+}
+.taskbar-item.add-app {
+    padding-top: 0rem;
+    font-size: 2rem;
+}
+

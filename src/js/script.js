@@ -20,6 +20,8 @@ localStorage.removeItem('windowEnvironmentState');
 // Create environment with autoRestore true
 const env = new Environment(true);
 
+
+
 /* Create a chat window
 env.createWindow('chat1', 'Chat Window', '', null, null, null, ChatWindow);
 
@@ -33,3 +35,4 @@ env.createWindow(
   Window
 );
 */
+
