@@ -21,3 +21,4 @@ To create a window, use the ```.createWindow``` method. We pass the following to
 
 width, height and window-type have simple defaults. The final argument, window-type, let's us pass any object class we make which inherits the Window class. If left blank/null, this default to the base window class.
 
+![Example](/public/images/eg.png)
