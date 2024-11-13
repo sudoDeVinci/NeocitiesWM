@@ -1,98 +1,127 @@
-// Event emitter for window events
+/**
+ * Base event emitter class for handling window events
+ */
 class WindowEventEmitter {
-  constructor() {
-    this.listeners = {};
+  constructor () {
+    /**
+     * @private
+     */
+    this.listeners = {}
   }
 
-  on(event, callback) {
+  /**
+   * Register an event listener
+   * @param {string} event - The event name to listen for
+   * @param {Function} callback - The callback function to execute
+   */
+  on (event, callback) {
     if (!this.listeners[event]) {
-      this.listeners[event] = [];
+      this.listeners[event] = []
     }
-    this.listeners[event].push(callback);
+    this.listeners[event].push(callback)
   }
 
-  emit(event, data) {
+  /**
+   * Emit an event to all registered listeners
+   * @param {string} event - The event name to emit
+   * @param {*} data - Data to pass to the listeners
+   */
+  emit (event, data) {
     if (this.listeners[event]) {
-      this.listeners[event].forEach(callback => callback(data));
+      this.listeners[event].forEach(callback => callback(data))
     }
   }
 }
 
+/**
+ * Represents a draggable window component with a title bar and content area
+ * @augments WindowEventEmitter
+ * @fires Window#close
+ * @fires Window#focus
+ * @fires Window#dragStart
+ * @fires Window#drag
+ * @fires Window#dragEnd
+ * @fires Window#minimize
+ */
 export default class Window extends WindowEventEmitter {
   /**
-   * @param {string} id 
-   * @param {string} title 
-   * @param {string} content 
-   * @param {number} width 
-   * @param {number} height 
-   * @param {object} savedState 
+   * Create a new Window instance
+   * @param {string} id - Unique identifier for the window
+   * @param {string} title - Window title displayed in the title bar
+   * @param {string} content - HTML content to display in the window
+   * @param {number} width - Initial window width in pixels
+   * @param {number} height - Initial window height in pixels
+   * @param {object} savedState - Previously saved window state
+   * @param {number} savedState.width - Saved window width
+   * @param {number} savedState.height - Saved window height
+   * @param {number} savedState.x - Saved X position
+   * @param {number} savedState.y - Saved Y position
+   * @param {boolean} savedState.isMinimized - Saved minimize state
+   * @param {number} savedState.zIndex - Saved z-index
    */
-  constructor(
-    id,
-    title,
-    content,
-    width = 400,
-    height = 300,
-    savedState = null
-  ) {
-    super();
-    this.id = id;
-    this.title = title;
-    this.content = content;
+  constructor (id, title, content, width = 400, height = 300, savedState = null) {
+    super()
+    this.id = id
+    this.title = title
+    this.content = content
 
     if (savedState) {
-      this.width = savedState.width;
-      this.height = savedState.height;
-      this.x = savedState.x;
-      this.y = savedState.y;
-      this.isMinimized = savedState.isMinimized;
-      this.zIndex = savedState.zIndex;
+      this.width = savedState.width
+      this.height = savedState.height
+      this.x = savedState.x
+      this.y = savedState.y
+      this.isMinimized = savedState.isMinimized
+      this.zIndex = savedState.zIndex
     } else {
-      this.width = width;
-      this.height = height;
+      this.width = width
+      this.height = height
 
       this.x = Math.min(
         Math.max(0, Math.random() * (window.innerWidth - width - 100)),
         window.innerWidth - width - 100
-      );
+      )
       this.y = Math.min(
         Math.max(50, Math.random() * (window.innerHeight - height - 100)),
-        window.innerHeight - height - 100
-      );
-      
-      this.isMinimized = false;
+        window.innerHeight - height
+      )
+
+      this.isMinimized = false
     }
 
     // Initialize drag state
-    this.isDragging = false;
-    this.initialX = 0;
-    this.initialY = 0;
-    this.initialMouseX = 0;
-    this.initialMouseY = 0;
+    this.isDragging = false
+    this.initialX = 0
+    this.initialY = 0
+    this.initialMouseX = 0
+    this.initialMouseY = 0
 
-    this.createElement();
+    this.createElement()
 
     // Adjust initial positioning to ensure it's within viewport
     this.x = Math.min(
       Math.max(0, this.x),
       Math.max(0, window.innerWidth - width)
-    );
+    )
     this.y = Math.min(
       Math.max(0, this.y),
       Math.max(0, window.innerHeight - height)
-    );
+    )
 
     if (this.isMinimized) {
-      this.minimize();
+      this.minimize()
     }
 
     // Add resize event listener
-    window.addEventListener('resize', this.handleResize.bind(this));
+    window.addEventListener('resize', this.handleResize.bind(this))
   }
 
-  createElement() {
-    this.element = document.createElement('div');
-    this.element.className = 'window';
+  /**
+   * Creates the DOM elements for the window
+   * @private
+   */
+  createElement () {
+    this.element = document.createElement('div')
+    this.element.className = 'window'
     this.element.style.cssText = `
         position: fixed;
         left: ${this.x}px;
@@ -104,10 +133,10 @@ export default class Window extends WindowEventEmitter {
         border-radius: 4px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         overflow: hidden;
-      `;
+      `
 
-    this.titleBar = document.createElement('div');
-    this.titleBar.className = 'window-title-bar';
+    this.titleBar = document.createElement('div')
+    this.titleBar.className = 'window-title-bar'
     this.titleBar.style.cssText = `
         padding: 8px;
         background-color: #333;
@@ -119,17 +148,18 @@ export default class Window extends WindowEventEmitter {
         justify-content: space-between;
         align-items: center;
         height: 40px;
-      `;
+      `
 
-    const titleText = document.createElement('div');
-    titleText.textContent = this.title;
-    this.titleBar.appendChild(titleText);
+    const titleText = document.createElement('div')
+    titleText.className = 'window-title-bar-text'
+    titleText.textContent = this.title
+    this.titleBar.appendChild(titleText)
 
-    const buttonContainer = document.createElement('div');
-    buttonContainer.style.display = 'flex';
+    const buttonContainer = document.createElement('div')
+    buttonContainer.style.display = 'flex'
 
-    const minimizeButton = document.createElement('button');
-    minimizeButton.textContent = '−';
+    const minimizeButton = document.createElement('button')
+    minimizeButton.textContent = '−'
     minimizeButton.style.cssText = `
         border: none;
         background: none;
@@ -139,15 +169,15 @@ export default class Window extends WindowEventEmitter {
         cursor: pointer;
         padding: 0 5px;
         margin-right: 5px;
-      `;
+      `
     minimizeButton.onclick = e => {
-      e.stopPropagation();
-      this.toggleMinimize();
-    };
-    buttonContainer.appendChild(minimizeButton);
+      e.stopPropagation()
+      this.toggleMinimize()
+    }
+    buttonContainer.appendChild(minimizeButton)
 
-    const closeButton = document.createElement('button');
-    closeButton.textContent = '×';
+    const closeButton = document.createElement('button')
+    closeButton.textContent = '×'
     closeButton.style.cssText = `
         border: none;
         background: none;
@@ -157,118 +187,157 @@ export default class Window extends WindowEventEmitter {
         cursor: pointer;
         padding: 0 5px;
         margin-right: 5px;
-      `;
+      `
     closeButton.onclick = e => {
-      e.stopPropagation();
-      this.emit('close', this);
-    };
-    buttonContainer.appendChild(closeButton);
-    this.titleBar.appendChild(buttonContainer);
+      e.stopPropagation()
+      this.emit('close', this)
+    }
+    buttonContainer.appendChild(closeButton)
+    this.titleBar.appendChild(buttonContainer)
 
-    this.contentArea = document.createElement('div');
-    this.contentArea.className = 'window-content';
+    this.contentArea = document.createElement('div')
+    this.contentArea.className = 'window-content'
     this.contentArea.style.cssText = `
         padding: 16px;
         overflow: auto;
         height: calc(100% - 37px);
-      `;
-    this.contentArea.innerHTML = this.content;
+      `
+    this.contentArea.innerHTML = this.content
 
     this.titleBar.onmousedown = e => {
-      e.preventDefault();
-      this.startDrag(e);
-    };
-    this.element.appendChild(this.titleBar);
-    this.element.appendChild(this.contentArea);
+      e.preventDefault()
+      this.startDrag(e)
+    }
+    this.element.appendChild(this.titleBar)
+    this.element.appendChild(this.contentArea)
 
-    this.element.onclick = () => this.emit('focus', this);
-  }
-
-  // New method to handle window repositioning on resize
-  handleResize() {
-    // Ensure the window stays within the new viewport boundaries
-    const maxX = Math.max(0, window.innerWidth - this.width);
-    const maxY = Math.max(0, window.innerHeight - this.height);
-
-    // Adjust x and y coordinates if they're now out of bounds
-    this.x = Math.min(this.x, maxX);
-    this.y = Math.min(this.y, maxY);
-
-    // Update the window's position
-    this.updatePosition();
-  }
-
-  startDrag(event) {
-    this.isDragging = true;
-    this.initialX = this.x;
-    this.initialY = this.y;
-    this.initialMouseX = event.clientX;
-    this.initialMouseY = event.clientY;
-    this.emit('dragStart', this);
+    this.element.onclick = () => this.emit('focus', this)
   }
 
   /**
-   * 
-   * @param {Event} event 
-   * @returns 
+   * Handles window repositioning when browser window is resized
+   * @private
    */
-  drag(event) {
-    if (!this.isDragging) return;
+  handleResize () {
+    // Ensure the window stays within the new viewport boundaries
+    const maxX = Math.max(0, window.innerWidth - this.width)
+    const maxY = Math.max(0, window.innerHeight - this.height)
+
+    // Adjust x and y coordinates if they're now out of bounds
+    this.x = Math.min(this.x, maxX)
+    this.y = Math.min(this.y, maxY)
+
+    // Update the window's position
+    this.updatePosition()
+  }
+
+  /**
+   * Initiates window dragging
+   * @param {MouseEvent} event - The mousedown event
+   */
+  startDrag (event) {
+    this.isDragging = true
+    this.initialX = this.x
+    this.initialY = this.y
+    this.initialMouseX = event.clientX
+    this.initialMouseY = event.clientY
+    this.emit('dragStart', this)
+  }
+
+  /**
+   * Updates window position during drag
+   * @param {MouseEvent} event - The mousemove event
+   */
+  drag (event) {
+    if (!this.isDragging) return
 
     // Calculate the distance moved
-    const deltaX = event.clientX - this.initialMouseX;
-    const deltaY = event.clientY - this.initialMouseY;
+    const deltaX = event.clientX - this.initialMouseX
+    const deltaY = event.clientY - this.initialMouseY
 
     // Calculate new position
-    let newX = this.initialX + deltaX;
-    let newY = this.initialY + deltaY;
+    let newX = this.initialX + deltaX
+    let newY = this.initialY + deltaY
 
     // Constrain to viewport bounds
-    newX = Math.max(0, Math.min(newX, window.innerWidth - this.width));
-    newY = Math.max(0, Math.min(newY, window.innerHeight - this.height));
+    newX = Math.max(0, Math.min(newX, window.innerWidth - this.width))
+    newY = Math.max(0, Math.min(newY, window.innerHeight - this.height))
 
-    this.x = newX;
-    this.y = newY;
-    this.updatePosition();
-    this.emit('drag', this);
+    this.x = newX
+    this.y = newY
+    this.updatePosition()
+    this.emit('drag', this)
   }
 
-  dragEnd(event) {
-    if (!this.isDragging) return;
-    this.isDragging = false;
-    this.emit('dragEnd', this);
+  /**
+   * Ends the window dragging operation
+   */
+  dragEnd () {
+    if (!this.isDragging) return
+    this.isDragging = false
+    this.emit('dragEnd', this)
   }
 
-  toggleMinimize() {
+  /**
+   * Toggles the window's minimized state
+   */
+  toggleMinimize () {
     if (this.isMinimized) {
-      this.restore();
+      this.restore()
     } else {
-      this.minimize();
+      this.minimize()
     }
-    this.emit('minimize', this);
+    this.emit('minimize', this)
   }
 
-  minimize() {
-    this.isMinimized = true;
-    this.element.style.display = 'none';
+  /**
+   * Minimizes the window
+   */
+  minimize () {
+    this.isMinimized = true
+    this.element.style.display = 'none'
   }
 
-  restore() {
-    this.isMinimized = false;
-    this.element.style.display = 'block';
+  /**
+   * Restores the window from minimized state
+   */
+  restore () {
+    this.isMinimized = false
+    this.element.style.display = 'block'
   }
 
-  updatePosition() {
-    this.element.style.left = `${this.x}px`;
-    this.element.style.top = `${this.y}px`;
+  /**
+   * Updates the window's position on screen
+   * @private
+   */
+  updatePosition () {
+    this.element.style.left = `${this.x}px`
+    this.element.style.top = `${this.y}px`
   }
 
-  setZIndex(index) {
-    this.zIndex = index;
-    this.element.style.zIndex = index;
+  /**
+   * Sets the window's z-index
+   * @param {number} index - The z-index value
+   */
+  setZIndex (index) {
+    this.zIndex = index
+    this.element.style.zIndex = index
   }
 
-  getState() {
+  /**
+   * Returns the current state of the window
+   * @property {string} id - Window identifier
+   * @property {string} title - Window title
+   * @property {string} content - Window content
+   * @property {number} width - Window width
+   * @property {number} height - Window height
+   * @property {number} x - Window X position
+   * @property {number} y - Window Y position
+   * @property {boolean} isMinimized - Window minimize state
+   * @property {number} zIndex - Window z-index
+   * @returns {object} The window state
+   */
+  getState () {
     return {
       id: this.id,
       title: this.title,
@@ -278,11 +347,14 @@ export default class Window extends WindowEventEmitter {
       x: this.x,
       y: this.y,
       isMinimized: this.isMinimized,
-      zIndex: this.zIndex,
-    };
+      zIndex: this.zIndex
+    }
   }
 
-  destroy() {
-    this.element.remove();
+  /**
+   * Removes the window from the DOM
+   */
+  destroy () {
+    this.element.remove()
   }
 }
