@@ -1,13 +1,12 @@
 /**
  * Base event emitter class for handling window events
  */
-class WindowEventEmitter {
-  constructor () {
-    /**
+class EventEmitter {
+  /**
      * @private
+     * @type {object.<string, Array<Function>>}
      */
-    this.listeners = {}
-  }
+  #listeners = {}
 
   /**
    * Register an event listener
@@ -15,27 +14,23 @@ class WindowEventEmitter {
    * @param {Function} callback - The callback function to execute
    */
   on (event, callback) {
-    if (!this.listeners[event]) {
-      this.listeners[event] = []
-    }
-    this.listeners[event].push(callback)
+    if (!this.#listeners[event]) this.#listeners[event] = []
+    this.#listeners[event].push(callback)
   }
 
   /**
    * Emit an event to all registered listeners
    * @param {string} event - The event name to emit
-   * @param {*} data - Data to pass to the listeners
+   * @param {*} [data] - Optional data to pass to the listeners
    */
   emit (event, data) {
-    if (this.listeners[event]) {
-      this.listeners[event].forEach(callback => callback(data))
-    }
+    if (this.#listeners[event]) this.#listeners[event].forEach(callback => callback(data))
   }
 }
 
 /**
  * Represents a draggable window component with a title bar and content area
- * @augments WindowEventEmitter
+ * @extends EventEmitter
  * @fires Window#close
  * @fires Window#focus
  * @fires Window#dragStart
@@ -43,7 +38,7 @@ class WindowEventEmitter {
  * @fires Window#dragEnd
  * @fires Window#minimize
  */
-export default class Window extends WindowEventEmitter {
+export default class Window extends EventEmitter {
   /**
    * Create a new Window instance
    * @param {string} id - Unique identifier for the window
@@ -86,6 +81,10 @@ export default class Window extends WindowEventEmitter {
       )
 
       this.isMinimized = false
+      this.background_color = '#FAF9F6'
+      this.titlebar_background_color = '#333'
+      this.titlebar_text_color = '#fff'
+
     }
 
     // Initialize drag state
@@ -128,7 +127,7 @@ export default class Window extends WindowEventEmitter {
         top: ${this.y}px;
         width: ${this.width}px;
         height: ${this.height}px;
-        background: white;
+        background: ${this.background_color};
         border: 1px solid #ccc;
         border-radius: 4px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -139,8 +138,8 @@ export default class Window extends WindowEventEmitter {
     this.titleBar.className = 'window-title-bar'
     this.titleBar.style.cssText = `
         padding: 8px;
-        background-color: #333;
-        color: white;
+        background: ${this.titlebar_background_color};
+        color: ${this.titlebar_text_color};
         border-bottom: 1px solid #ddd;
         cursor: move;
         user-select: none;
@@ -234,6 +233,8 @@ export default class Window extends WindowEventEmitter {
   /**
    * Initiates window dragging
    * @param {MouseEvent} event - The mousedown event
+   * @fires Window#dragStart
+   * @private
    */
   startDrag (event) {
     this.isDragging = true
@@ -247,6 +248,7 @@ export default class Window extends WindowEventEmitter {
   /**
    * Updates window position during drag
    * @param {MouseEvent} event - The mousemove event
+   * @fires Window#drag
    */
   drag (event) {
     if (!this.isDragging) return
@@ -266,20 +268,32 @@ export default class Window extends WindowEventEmitter {
     this.x = newX
     this.y = newY
     this.updatePosition()
+    /**
+     * @event Window#drag
+     * @type {Window}
+     * @property {Window} window - The window instance that is being dragged
+     */
     this.emit('drag', this)
   }
 
   /**
    * Ends the window dragging operation
+   * @fires Window#dragEnd
    */
   dragEnd () {
     if (!this.isDragging) return
     this.isDragging = false
+    /**
+     * @event Window#dragEnd
+     * @type {Window}
+     * @property {Window} window - The window instance that was dragged
+     */
     this.emit('dragEnd', this)
   }
 
   /**
    * Toggles the window's minimized state
+   * @fires Window#minimize
    */
   toggleMinimize () {
     if (this.isMinimized) {
@@ -287,6 +301,11 @@ export default class Window extends WindowEventEmitter {
     } else {
       this.minimize()
     }
+    /**
+     * @event Window#minimize
+     * @type {Window}
+     * @property {Window} window - The window instance that was minimized
+     */
     this.emit('minimize', this)
   }
 

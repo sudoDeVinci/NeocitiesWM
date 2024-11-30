@@ -12,6 +12,11 @@ export default class Environment {
     this.currentlyDragging = null
     this.username = 'Anonymous-' + Math.floor(Math.random() * 1000)
 
+    // Set default colors
+    this.background_color = '#FAF9F6'
+    this.taskbar_background_color = '#333'
+    this.taskbar_text_color = '#fff'
+
     // Add custom font for code blocks
     const fontLink = document.createElement('link')
     fontLink.href = 'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap'
@@ -22,17 +27,31 @@ export default class Environment {
     this.environment = document.createElement('div')
     this.environment.id = 'window-environment'
     this.environment.style.cssText = `
-      width: 100%;
-      max-height: 100%;
-      max-width: 100%;
-      height: 100%;
+      height: 100vh;
+      width: 100vw;
       overflow-x: hidden;
       overflow-y: hidden;
+      background-color: ${this.background_color};
       `
 
     // Taskbar DOM element
     this.taskbar = document.createElement('div')
     this.taskbar.id = 'taskbar'
+    this.taskbar.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      max-width: 100vw;
+      display: flex;
+      min-height: 30px;
+      align-items: center;
+      padding: 0 10px;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+      z-index: 9999;
+      background-color: ${this.taskbar_background_color};
+      color: ${this.taskbar_text_color};
+      `
 
     // Icon container DOM element
     this.iconContainer = document.createElement('div')
@@ -214,15 +233,23 @@ export default class Environment {
 
     switch (WindowClass) {
       case Popup:
-        window = new Popup(id, content, width, height, savedState)
+        window = new Popup(id, 
+                          content,
+                          width,
+                          height,
+                          savedState
+                        )
         break
 
       case ChatWindow:
-        window = new ChatWindow(id, width, height, 'default', savedState)
+        window = new ChatWindow(id,
+                                width, 
+                                height, 
+                                'default', 
+                                savedState
+                              )
         window.on('toggleEmojis', () => this.toggleEmojis(window))
-        window.on('usernameChanged', (username) => {
-          this.username = username
-        })
+        window.on('usernameChanged', (username) => {this.username = username})
         break
 
       case EmojiSelector:
@@ -232,7 +259,13 @@ export default class Environment {
       case null:
       case Window:
       default:
-        window = new Window(id, title, content, width, height, savedState)
+        window = new Window(id,
+                            title, 
+                            content, 
+                            width, 
+                            height, 
+                            savedState
+                          )
     }
 
     // Set up event listeners
@@ -242,7 +275,13 @@ export default class Environment {
     window.on('minimize', () => this.saveState())
     window.on('drag', () => this.saveState())
     window.on('dragEnd', () => this.saveState())
-    window.on('popup', (data) => this.newWindow('Popup', data.content, data.width, data.height, null, Popup))
+    window.on('popup', (data) => this.newWindow('Popup',
+                                                data.content, 
+                                                data.width, 
+                                                data.height, 
+                                                null, 
+                                                Popup
+                                              ))
 
     this.windows.set(window.id, window)
     this.environment.appendChild(window.element)

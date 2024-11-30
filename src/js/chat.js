@@ -377,7 +377,7 @@ export default class ChatWindow extends Window {
   }
 
   connectWebSocket () {
-    this.ws = new WebSocket('wss://courselab.lnu.se/message-app/socket')
+    this.ws = new WebSocket('')
 
     this.ws.onopen = () => {
       this.addSystemMessage('Connecting to chat server')
@@ -430,7 +430,7 @@ export default class ChatWindow extends Window {
       data: text,
       username: this.username,
       channel: this.channel,
-      key: 'eDBE76deU7L0H9mEBgxUKVR0VCnq0XBd'
+      key: ''
     }
 
     this.ws.send(JSON.stringify(message))
