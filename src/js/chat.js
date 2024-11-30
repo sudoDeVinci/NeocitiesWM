@@ -279,8 +279,7 @@ export default class ChatWindow extends Window {
 
     let msgcolor = '#f9f9f9'
     if (message.username === this.username) msgcolor = this.senderColor
-    else if (message.username === 'System' || message.username === 'The Server') msgcolor = '#f9f9f9'
-    else msgcolor = this.receiver
+    else if (message.username === 'System' && message.username === 'The Server') msgcolor = '#f9f9f9'
 
     messageElement.style.cssText = `
       margin-bottom: 10px;

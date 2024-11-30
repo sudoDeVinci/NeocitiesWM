@@ -109,7 +109,7 @@ export default class Environment {
     addButton2.className = 'taskbar-item add-app'
     addButton1.textContent = '+'
     addButton2.textContent = '+'
-    // addButton.onclick = () => this.addAppPrompt(); // Open a prompt to add new apps
+    
     this.taskbar.appendChild(addButton1)
     this.taskbar.appendChild(addButton2)
   }

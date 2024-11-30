@@ -170,7 +170,7 @@ export default class EmojiSelector extends Window {
         `
 
         emojiButton.onclick = () => {
-          // this.trigger('emojiSelected', { emoji });
+
           this.emit('emojiSelected', { emoji })
         }
 

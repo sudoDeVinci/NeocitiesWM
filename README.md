@@ -1,7 +1,6 @@
 # NeocitiesWM - Neocities Window Manager
 
 ## Usage
-
 Set up an environment for the client.
 
 ```Javascript
@@ -9,13 +8,11 @@ Set up an environment for the client.
 const env = new Environment(true);
 ```
 
-
-![Example](/public/images/eg.png)
+![Example](/public/images/{C715DC36-4018-49C7-A084-1808B75F7A61}.png)
 
 ## TODO
 
 ### Custom Window Types
-
 We want users to be able to create custom window types with custom events emitted and handled by the environment.
 - [ ] Environment.NewWindowType(CustomWindowType, events):
     - [ ] Change existing window definitions to accept argument in object form rather than separately.
@@ -46,3 +43,12 @@ Environment.NewWindowType(CustomWindowType, events)
 
 ### Styling Window Types
 We want to make dynamically styling elements easier for a user.
+All managed elements are constructed from discrete layered elements that can be individually accessed and styled.
+
+#### Windows
+
+
+#### Environment
+
+
+#### TaskBar
