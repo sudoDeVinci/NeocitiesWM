@@ -112,6 +112,9 @@ export default class Window extends EventEmitter {
 
     // Add resize event listener
     window.addEventListener('resize', this.handleResize.bind(this))
+
+    // Addresize handles
+    this.createResizeHandles()
   }
 
   /**
@@ -211,6 +214,92 @@ export default class Window extends EventEmitter {
     this.element.appendChild(this.contentArea)
 
     this.element.onclick = () => this.emit('focus', this)
+    //this.element.style.overflow = 'visible'
+  }
+
+  /**
+   * Creates resize handles for the window
+   * @private
+   */
+  createResizeHandles () {
+    const resizeHandles = [
+      { cursor: 'nwse-resize', position: 'top-left', dx: -1, dy: -1 },
+      { cursor: 'ns-resize', position: 'top-center', dx: 0, dy: -1 },
+      { cursor: 'nesw-resize', position: 'top-right', dx: 1, dy: -1 },
+      { cursor: 'ew-resize', position: 'middle-left', dx: -1, dy: 0 },
+      { cursor: 'ew-resize', position: 'middle-right', dx: 1, dy: 0 },
+      { cursor: 'nesw-resize', position: 'bottom-left', dx: -1, dy: 1 },
+      { cursor: 'ns-resize', position: 'bottom-center', dx: 0, dy: 1 },
+      { cursor: 'nwse-resize', position: 'bottom-right', dx: 1, dy: 1 }
+    ]
+
+    resizeHandles.forEach(handle => {
+      const resizeHandle = document.createElement('div')
+      resizeHandle.className = `resize-handle resize-${handle.position}`
+      resizeHandle.style.cssText = `
+        position: absolute;
+        background: transparent;
+        z-index: 10;
+        cursor: ${handle.cursor};
+      `
+
+      // Position and size the resize handles
+      switch (handle.position) {
+        case 'top-left':
+          resizeHandle.style.top = '-5px'
+          resizeHandle.style.left = '-5px'
+          resizeHandle.style.width = '15px'
+          resizeHandle.style.height = '15px'
+          break
+        case 'top-center':
+          resizeHandle.style.top = '-5px'
+          resizeHandle.style.left = 'calc(50% - 5px)'
+          resizeHandle.style.width = '10px'
+          resizeHandle.style.height = '10px'
+          break
+        case 'top-right':
+          resizeHandle.style.top = '-5px'
+          resizeHandle.style.right = '-5px'
+          resizeHandle.style.width = '15px'
+          resizeHandle.style.height = '15px'
+          break
+        case 'middle-left':
+          resizeHandle.style.top = 'calc(50% - 5px)'
+          resizeHandle.style.left = '-5px'
+          resizeHandle.style.width = '10px'
+          resizeHandle.style.height = '10px'
+          break
+        case 'middle-right':
+          resizeHandle.style.top = 'calc(50% - 5px)'
+          resizeHandle.style.right = '-5px'
+          resizeHandle.style.width = '10px'
+          resizeHandle.style.height = '10px'
+          break
+        case 'bottom-left':
+          resizeHandle.style.bottom = '-5px'
+          resizeHandle.style.left = '-5px'
+          resizeHandle.style.width = '15px'
+          resizeHandle.style.height = '15px'
+          break
+        case 'bottom-center':
+          resizeHandle.style.bottom = '-5px'
+          resizeHandle.style.left = 'calc(50% - 5px)'
+          resizeHandle.style.width = '10px'
+          resizeHandle.style.height = '10px'
+          break
+        case 'bottom-right':
+          resizeHandle.style.bottom = '-5px'
+          resizeHandle.style.right = '-5px'
+          resizeHandle.style.width = '15px'
+          resizeHandle.style.height = '15px'
+          break
+      }
+
+      // Add resize event listener
+      resizeHandle.addEventListener('mousedown', (e) => this.startResize(e, handle.dx, handle.dy))
+
+      this.element.appendChild(resizeHandle)
+    })
   }
 
   /**
@@ -375,5 +464,108 @@ export default class Window extends EventEmitter {
    */
   destroy () {
     this.element.remove()
+  }
+
+  /**
+   * Initiates window resizing
+   * @param {MouseEvent} event - The mousedown event
+   * @param {number} dx - Horizontal resize direction (-1, 0, or 1)
+   * @param {number} dy - Vertical resize direction (-1, 0, or 1)
+   * @private
+   */
+  startResize (event, dx, dy) {
+    event.stopPropagation()
+    
+    // Prevent text selection during resize
+    event.preventDefault()
+
+    // Store initial window state
+    this.isResizing = true
+    this.initialWidth = this.width
+    this.initialHeight = this.height
+    this.initialX = this.x
+    this.initialY = this.y
+    this.initialMouseX = event.clientX
+    this.initialMouseY = event.clientY
+    this.resizeDirX = dx
+    this.resizeDirY = dy
+
+    // Add global event listeners for resize
+    document.addEventListener('mousemove', this.resize.bind(this))
+    document.addEventListener('mouseup', this.endResize.bind(this))
+  }
+
+  /**
+   * Handles window resizing
+   * @param {MouseEvent} event - The mousemove event
+   * @private
+   */
+  resize (event) {
+    if (!this.isResizing) return
+
+    // Calculate the distance moved
+    const deltaX = event.clientX - this.initialMouseX
+    const deltaY = event.clientY - this.initialMouseY
+
+    // Calculate new dimensions and position
+    let newWidth = this.initialWidth
+    let newHeight = this.height
+    let newX = this.x
+    let newY = this.y
+
+    // Horizontal resize
+    if (this.resizeDirX !== 0) {
+      newWidth = Math.max(200, this.initialWidth + (deltaX * this.resizeDirX))
+      
+      // Adjust X position for left-side resize
+      if (this.resizeDirX < 0) {
+        newX = this.initialX + (this.initialWidth - newWidth)
+      }
+    }
+
+    // Vertical resize
+    if (this.resizeDirY !== 0) {
+      newHeight = Math.max(100, this.initialHeight + (deltaY * this.resizeDirY))
+      
+      // Adjust Y position for top-side resize
+      if (this.resizeDirY < 0) {
+        newY = this.initialY + (this.initialHeight - newHeight)
+      }
+    }
+
+    // Constrain to viewport bounds
+    newX = Math.max(0, Math.min(newX, window.innerWidth - newWidth))
+    newY = Math.max(0, Math.min(newY, window.innerHeight - newHeight))
+
+    // Update window properties
+    this.width = newWidth
+    this.height = newHeight
+    this.x = newX
+    this.y = newY
+
+    // Update window styling
+    this.element.style.width = `${this.width}px`
+    this.element.style.height = `${this.height}px`
+    this.updatePosition()
+
+    // Adjust content area
+    this.contentArea.style.height = `calc(100% - 37px)`
+  }
+
+  /**
+   * Ends the window resizing operation
+   * @private
+   */
+  endResize () {
+    if (!this.isResizing) return
+
+    this.isResizing = false
+
+    // Remove global event listeners
+    document.removeEventListener('mousemove', this.resize)
+    document.removeEventListener('mouseup', this.endResize)
+
+    // Emit resize event if needed
+    this.emit('resize', this)
   }
 }

@@ -43,14 +43,13 @@ Environment.NewWindowType(CustomWindowType, events)
 We want to make dynamically styling elements easier for a user.
 All managed elements are constructed from discrete layered elements that can be individually accessed and styled.
 
-#### Windows
-
-![Example](/public/images/window.png)
-
-
 #### Environment
 
 ![Example](/public/images/environment.png)
 
+#### Taskbar
 
-#### TaskBar
+
+#### Windows
+
+![Example](/public/images/window.png)
