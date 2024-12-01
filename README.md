@@ -47,8 +47,6 @@ All managed elements are constructed from discrete layered elements that can be 
 
 ![Example](/public/images/environment.png)
 
-#### Taskbar
-
 
 #### Windows
 
