@@ -8,8 +8,6 @@ Set up an environment for the client.
 const env = new Environment(true);
 ```
 
-![Example](/public/images/{C715DC36-4018-49C7-A084-1808B75F7A61}.png)
-
 ## TODO
 
 ### Custom Window Types
@@ -46,6 +44,8 @@ We want to make dynamically styling elements easier for a user.
 All managed elements are constructed from discrete layered elements that can be individually accessed and styled.
 
 #### Windows
+
+![Example](/public/images/window.png)
 
 
 #### Environment

@@ -149,10 +149,10 @@ export default class Window extends EventEmitter {
         height: 40px;
       `
 
-    const titleText = document.createElement('div')
-    titleText.className = 'window-title-bar-text'
-    titleText.textContent = this.title
-    this.titleBar.appendChild(titleText)
+    this.titleText = document.createElement('div')
+    this.titleText.className = 'window-title-bar-text'
+    this.titleText.textContent = this.title
+    this.titleBar.appendChild(this.titleText)
 
     const buttonContainer = document.createElement('div')
     buttonContainer.style.display = 'flex'
