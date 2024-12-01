@@ -55,6 +55,7 @@ export default class Environment {
 
     // Icon container DOM element
     this.iconContainer = document.createElement('div')
+    this.iconContainer.id = 'icon-container'
     this.iconContainer.style.cssText = `
       position: absolute;
       top: 0;

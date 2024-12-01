@@ -50,5 +50,7 @@ All managed elements are constructed from discrete layered elements that can be 
 
 #### Environment
 
+![Example](/public/images/environment.png)
+
 
 #### TaskBar

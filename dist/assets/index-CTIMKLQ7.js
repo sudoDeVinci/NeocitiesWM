@@ -20,7 +20,7 @@
         justify-content: space-between;
         align-items: center;
         height: 40px;
-      `,this.titleText=document.createElement("div"),titleText.className="window-title-bar-text",titleText.textContent=this.title,this.titleBar.appendChild(titleText);const e=document.createElement("div");e.style.display="flex";const t=document.createElement("button");t.textContent="−",t.style.cssText=`
+      `,this.titleText=document.createElement("div"),this.titleText.className="window-title-bar-text",this.titleText.textContent=this.title,this.titleBar.appendChild(this.titleText);const e=document.createElement("div");e.style.display="flex";const t=document.createElement("button");t.textContent="−",t.style.cssText=`
         border: none;
         background: none;
         font-size: 20px;
@@ -240,7 +240,7 @@
       z-index: 9999;
       background-color: ${this.taskbar_background_color};
       color: ${this.taskbar_text_color};
-      `,this.iconContainer=document.createElement("div"),this.iconContainer.style.cssText=`
+      `,this.iconContainer=document.createElement("div"),this.iconContainer.id="icon-container",this.iconContainer.style.cssText=`
       position: absolute;
       top: 0;
       left: 0;
