@@ -4,7 +4,76 @@ import EmojiSelector from './emojiselector.js'
 import Popup from './timedwindow.js'
 import Icon from './Icon.js'
 
+/**
+ * Environment class for managing windows and icons in a desktop-like environment.
+ * @typedef {Object} Environment
+ * @property {string} background_color - The background color of the Environment container
+ * @property {Map<String, Window>} windows - A map of all windows in the environment keyed by their id
+ * @property {Map<String, Icon>} icons - A map of all icons in the environment keyed by their title
+ * @property {HTMLDivElement} iconContainer - The icon container DOM element
+ * @property {HTMLDivElement} taskbar - The taskbar DOM element
+ * @property {string} taskbar_background_color - The background color of the taskbar
+ * @property {string} taskbar_text_color - The text color of the taskbar
+ * @property {number} zIndexBase - The base z-index value for windows
+ * @property {Window} currentlyDragging - The window currently being dragged
+ * @property {string} username - The username of the current user
+ */
 export default class Environment {
+
+  /**
+   * @property {HTMLDivElement} environment - The environment container DOM element
+   * @default null 
+   */
+  environment = null
+
+  /**
+   * @property {string} background_color - The background color of the Environment container
+   * @default '#FAF9F6'
+   */
+  background_color = '#FAF9F6'
+
+  /**
+   * @property {HTMLDivElement} taskbar - The taskbar DOM element
+   * @default null
+   */
+  taskbar = null
+
+  /**
+   * @property {string} taskbar_background_color - The background color of the taskbar
+   * @default '#333'
+   */
+  taskbar_background_color = '#333'
+
+  /**
+   * @property {string} taskbar_text_color - The text color of the taskbar
+   * @default '#fff'
+   */
+  taskbar_text_color = '#fff'
+
+  /**
+   * @property {Map<String, Window>} windows - A map of all windows in the environment keyed by their id
+   * @default null
+   */
+  windows = null
+
+  /**
+   * @property {Map<string, Icon>} icons - A map of all icons in the environment keyed by their title
+   * @default null
+   */
+  icons = null
+
+  /**
+   * @property {HTMLDivElement} iconContainer - The icon container DOM element
+   * @default null
+   */
+  iconContainer = null
+
+
+  /**
+   * @param {boolean} autoRestore
+   * @returns {Environment}
+   * @constructor
+   */
   constructor (autoRestore = false) {
     this.windows = new Map()
     this.icons = new Map()
@@ -91,7 +160,6 @@ export default class Environment {
     this.environment.appendChild(this.taskbar)
   }
 
-  // Add default icons to taskbar
   addDefaultTaskbarIcons () {
     const defaultApps = [
       { title: 'Chat', type: ChatWindow, height: 700, width: 350 },
@@ -161,7 +229,6 @@ export default class Environment {
     })
   }
 
-  // Helper to create taskbar icons
   createTaskbarIcon (title, type, width, height) {
     const taskbarItem = document.createElement('div')
     taskbarItem.className = 'taskbar-item'
@@ -170,7 +237,6 @@ export default class Environment {
     return taskbarItem
   }
 
-  // Pin open windows to the taskbar
   pinWindow (window) {
     const taskbarItem = document.createElement('div')
     taskbarItem.className = 'taskbar-item'
@@ -195,7 +261,6 @@ export default class Environment {
     }
   }
 
-  // Helper to create windows
   newWindow (title, content, width, height, savedState, WindowClass) {
     const window = this.createWindow(crypto.randomUUID(), title, content, width, height, savedState, WindowClass)
     this.pinWindow(window)

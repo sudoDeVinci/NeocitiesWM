@@ -145,7 +145,6 @@ export default class Window extends EventEmitter {
    */
   width = null
 
-
   /**
    * Create a new Window instance
    * @param {string} id - Unique identifier for the window
