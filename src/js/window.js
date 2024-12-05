@@ -39,6 +39,113 @@ class EventEmitter {
  * @fires Window#minimize
  */
 export default class Window extends EventEmitter {
+
+  /**
+   * The minimize button element
+   * @property {HTMLButtonElement} minimizeButton - The minimize button element
+   * @default null
+   */
+  minimizeButton = null
+
+  /**
+   * The close button element
+   * @property {HTMLButtonElement} closeButton - The close button element
+   * @default null
+   */
+  closeButton = null
+
+  /**
+   * The window element containing all other elements
+   * @property {HTMLDivElement} element - The window element
+   * @default null
+   */
+  element = null
+
+  /**
+   * The unique identifier for the window
+   * @property {string} id - The window identifier
+   * @default null
+   */
+  id = null
+
+  /**
+   * The content in the window content area
+   * @property {string} content - The window content
+   * @default null
+   */
+  content = null
+
+  /**
+   * The title bar element containing the window title and buttons
+   * @property {HTMLDivElement} titleBar - The title bar element
+   * @default null
+   */
+  titleBar = null
+
+  /**
+   * The text element displaying the window title
+   * @property {HTMLDivElement} titleText - The title text element
+   * @default null
+   */
+  titleText = null
+
+  /**
+   * The content area element containing the window content
+   * @property {HTMLDivElement} contentArea - The content area element
+   * @default null
+   */
+  contentArea = null
+
+  /**
+   * The window's current X position
+   * @property {number} x - The window's X position
+   * @default 100
+   */
+  x = 100
+
+  /**
+   * The window's current Y position
+   * @property {number} y - The window's Y position
+   * @default 100
+   */
+  y = 100
+
+  /**
+   * Whether the window is currently minimized
+   * @property {boolean} isMinimized - The window's minimized state
+   * @default false
+   */
+  isMinimized = false
+
+  /**
+   * Whether the window is currently being dragged
+   * @property {boolean} isDragging - The window's dragging state
+   * @default false
+   */
+  isDragging = false
+
+  /**
+   * The current window z index
+   * @property {number} zIndex - The window's z-index
+   * @default 0
+   */
+  zIndex = 0
+
+  /**
+   * The window's height in pixels
+   * @property {number} height - The window's height
+   * @default null
+   */
+  height = null
+
+  /**
+   * The window's width in pixels
+   * @property {number} width - The window's width
+   * @default null
+   */
+  width = null
+
+
   /**
    * Create a new Window instance
    * @param {string} id - Unique identifier for the window
@@ -160,9 +267,10 @@ export default class Window extends EventEmitter {
     const buttonContainer = document.createElement('div')
     buttonContainer.style.display = 'flex'
 
-    const minimizeButton = document.createElement('button')
-    minimizeButton.textContent = '−'
-    minimizeButton.style.cssText = `
+    this.minimizeButton = document.createElement('button')
+    this.minimizeButton.className = 'window-minimize-button'
+    this.minimizeButton.textContent = '−'
+    this.minimizeButton.style.cssText = `
         border: none;
         background: none;
         font-size: 20px;
@@ -172,15 +280,16 @@ export default class Window extends EventEmitter {
         padding: 0 5px;
         margin-right: 5px;
       `
-    minimizeButton.onclick = e => {
+    this.minimizeButton.onclick = e => {
       e.stopPropagation()
       this.toggleMinimize()
     }
-    buttonContainer.appendChild(minimizeButton)
+    buttonContainer.appendChild(this.minimizeButton)
 
-    const closeButton = document.createElement('button')
-    closeButton.textContent = '×'
-    closeButton.style.cssText = `
+    this.closeButton = document.createElement('button')
+    this.closeButton.className = 'window-close-button'
+    this.closeButton.textContent = '×'
+    this.closeButton.style.cssText = `
         border: none;
         background: none;
         font-size: 20px;
@@ -190,11 +299,11 @@ export default class Window extends EventEmitter {
         padding: 0 5px;
         margin-right: 5px;
       `
-    closeButton.onclick = e => {
+    this.closeButton.onclick = e => {
       e.stopPropagation()
       this.emit('close', this)
     }
-    buttonContainer.appendChild(closeButton)
+    buttonContainer.appendChild(this.closeButton)
     this.titleBar.appendChild(buttonContainer)
 
     this.contentArea = document.createElement('div')
@@ -214,7 +323,6 @@ export default class Window extends EventEmitter {
     this.element.appendChild(this.contentArea)
 
     this.element.onclick = () => this.emit('focus', this)
-    //this.element.style.overflow = 'visible'
   }
 
   /**

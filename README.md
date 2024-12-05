@@ -44,7 +44,7 @@ We want to make dynamically styling elements easier for a user.
 All managed elements are constructed from discrete layered elements that can be individually accessed and styled.
 
 #### Environment
-
+ThEnvironment can be looked at as consisting of only a few parts, each wih their own respective styling.
 ![Example](/public/images/environment.png)
 
 
