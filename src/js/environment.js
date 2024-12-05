@@ -6,25 +6,29 @@ import Icon from './Icon.js'
 
 /**
  * Environment class for managing windows and icons in a desktop-like environment.
- * @typedef {Object} Environment
- * @property {string} background_color - The background color of the Environment container
- * @property {Map<String, Window>} windows - A map of all windows in the environment keyed by their id
- * @property {Map<String, Icon>} icons - A map of all icons in the environment keyed by their title
- * @property {HTMLDivElement} iconContainer - The icon container DOM element
- * @property {HTMLDivElement} taskbar - The taskbar DOM element
- * @property {string} taskbar_background_color - The background color of the taskbar
- * @property {string} taskbar_text_color - The text color of the taskbar
- * @property {number} zIndexBase - The base z-index value for windows
- * @property {Window} currentlyDragging - The window currently being dragged
- * @property {string} username - The username of the current user
+ * @class
  */
 export default class Environment {
+
+/**
+ * @typedef {Object} WindowConfig
+ * @property {number} width - Default window width
+ * @property {number} height - Default window height
+ * @property {string} icon - Icon path
+ * @property {Object} [defaults] - Other misc properties
+ * @property {Object.<string, Function[]>} [events] - Event listeners & callbacks
+ */
 
   /**
    * @property {HTMLDivElement} environment - The environment container DOM element
    * @default null 
    */
   environment = null
+
+   /**
+   * @property {typeof Window, WindowConfig>} windowTypes - The types of windows that can be created
+   */
+   windowTypes = null
 
   /**
    * @property {string} background_color - The background color of the Environment container
@@ -91,6 +95,40 @@ export default class Environment {
     fontLink.href = 'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap'
     fontLink.rel = 'stylesheet'
     document.head.appendChild(fontLink)
+
+    // Set up window types
+    this.windowTypes = new Map([
+      [Window, {
+        width: 600,
+        height: 400,
+        icon: '',
+        defaults: {},
+        events: {}
+      }],
+      [ChatWindow, {
+        width: 600,
+        height: 400,
+        icon: '',
+        defaults: {},
+        events: {}
+      }],
+      [Popup, {
+        width: 300,
+        height: 200,
+        icon: '',
+        defaults: {},
+        events: {}
+      }],
+      [EmojiSelector, 
+        {
+          width: 300,
+          height: 400,
+          icon: '',
+          defaults: {},
+          events: {}
+        }
+      ]
+    ]);
 
     // Page Environment Container
     this.environment = document.createElement('div')

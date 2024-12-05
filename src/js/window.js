@@ -4,7 +4,7 @@
 class EventEmitter {
   /**
      * @private
-     * @type {object.<string, Array<Function>>}
+     * @type {object.<string, Function[]>}
      */
   #listeners = {}
 
