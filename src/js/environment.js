@@ -1,4 +1,5 @@
 import Window from './window.js'
+import WindowConfig from './window.js'
 import ChatWindow from './chat.js'
 import EmojiSelector from './emojiselector.js'
 import Popup from './timedwindow.js'
@@ -10,25 +11,11 @@ import Icon from './Icon.js'
  */
 export default class Environment {
 
-/**
- * @typedef {Object} WindowConfig
- * @property {number} width - Default window width
- * @property {number} height - Default window height
- * @property {string} icon - Icon path
- * @property {Object} [defaults] - Other misc properties
- * @property {Object.<string, Function[]>} [events] - Event listeners & callbacks
- */
-
   /**
    * @property {HTMLDivElement} environment - The environment container DOM element
    * @default null 
    */
   environment = null
-
-   /**
-   * @property {typeof Window, WindowConfig>} windowTypes - The types of windows that can be created
-   */
-   windowTypes = null
 
   /**
    * @property {string} background_color - The background color of the Environment container
@@ -90,45 +77,64 @@ export default class Environment {
     this.taskbar_background_color = '#333'
     this.taskbar_text_color = '#fff'
 
+    /**
+     * @property {typeof Window, WindowConfig>} windowTypes - The types of windows that can be created
+     */
+    this.windowTypes = new Map([
+      [Window.name, {
+        width: 600,
+        height: 400,
+        icon: '',
+        title: 'Window',
+        content: '',
+        styles: {},
+        events: {},
+        savedstate: {}
+      }],
+      [ChatWindow.name, {
+        width: 600,
+        height: 400,
+        icon: '',
+        title: 'Chat',
+        channel: 'general',
+        username: 'Anonymous',
+        content: '',
+        styles: {},
+        events: {
+          toggleEmojis: () => this.toggleEmojis(window),
+          usernameChanged: (username) => {this.username = username}
+        },
+        savedstate: {}
+      }],
+      [Popup.name, {
+        width: 300,
+        height: 200,
+        icon: '',
+        title: 'Popup',
+        content: '',
+        styles: {},
+        events: {},
+        savedstate: {}
+      }],
+      [EmojiSelector.name, 
+        {
+          width: 300,
+          height: 400,
+          icon: '',
+          title: 'Emojis',
+          content: '',
+          styles: {},
+          events: {},
+          savedstate: {}
+        }
+      ]
+    ]);
+
     // Add custom font for code blocks
     const fontLink = document.createElement('link')
     fontLink.href = 'https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap'
     fontLink.rel = 'stylesheet'
     document.head.appendChild(fontLink)
-
-    // Set up window types
-    this.windowTypes = new Map([
-      [Window, {
-        width: 600,
-        height: 400,
-        icon: '',
-        defaults: {},
-        events: {}
-      }],
-      [ChatWindow, {
-        width: 600,
-        height: 400,
-        icon: '',
-        defaults: {},
-        events: {}
-      }],
-      [Popup, {
-        width: 300,
-        height: 200,
-        icon: '',
-        defaults: {},
-        events: {}
-      }],
-      [EmojiSelector, 
-        {
-          width: 300,
-          height: 400,
-          icon: '',
-          defaults: {},
-          events: {}
-        }
-      ]
-    ]);
 
     // Page Environment Container
     this.environment = document.createElement('div')
@@ -199,26 +205,15 @@ export default class Environment {
   }
 
   addDefaultTaskbarIcons () {
-    const defaultApps = [
-      { title: 'Chat', type: ChatWindow, height: 700, width: 350 },
-      { title: 'Window', type: Window, height: 300, width: 600 },
-    ]
-
-    defaultApps.forEach(app => {
-      const icon = this.createTaskbarIcon(app.title, app.type, app.width, app.height)
-      this.taskbar.appendChild(icon)
-    })
+    const icon = this.createTaskbarIcon('Window', Window)
+    this.taskbar.appendChild(icon)
 
     // Add "Add" button
     const addButton1 = document.createElement('div')
-    const addButton2 = document.createElement('div')
     addButton1.className = 'taskbar-item add-app'
-    addButton2.className = 'taskbar-item add-app'
     addButton1.textContent = '+'
-    addButton2.textContent = '+'
     
     this.taskbar.appendChild(addButton1)
-    this.taskbar.appendChild(addButton2)
   }
 
   /**
@@ -243,7 +238,7 @@ export default class Environment {
     width,
     handler
   }) {
-    const icon = new Icon(title, image, () => this.newWindow(title, '', width, height, null, type))
+    const icon = new Icon(title, image, () => this.newWindow(type, this.windowTypes.get(type.name)))
     icon.setPosition(x, y)
     this.iconContainer.appendChild(icon.element)
     this.icons.set(title, icon)
@@ -267,11 +262,11 @@ export default class Environment {
     })
   }
 
-  createTaskbarIcon (title, type, width, height) {
+  createTaskbarIcon (title, WindowClass) {
     const taskbarItem = document.createElement('div')
     taskbarItem.className = 'taskbar-item'
     taskbarItem.textContent = title
-    taskbarItem.onclick = () => this.newWindow(title, '', width, height, null, type)
+    taskbarItem.onclick = () => this.newWindow(WindowClass, this.windowTypes.get(WindowClass.name))
     return taskbarItem
   }
 
@@ -299,8 +294,13 @@ export default class Environment {
     }
   }
 
-  newWindow (title, content, width, height, savedState, WindowClass) {
-    const window = this.createWindow(crypto.randomUUID(), title, content, width, height, savedState, WindowClass)
+  /**
+   * Create a new window and add it to the environment
+   * @param {typeof Window} WindowClass - window class/subclass type
+   * @param {WindowConfig} config - window configuration object
+   */
+  newWindow (WindowClass = Window, config = {}) {
+    const window = this.createWindow(crypto.randomUUID(), WindowClass, config)
     this.pinWindow(window)
     this.bringToFront(window)
     this.updateZIndices()
@@ -310,67 +310,59 @@ export default class Environment {
   /**
    * Factory method for creating windows by passed type.
    * @param {string} id - unique window id
-   * @param {string} title - window title
-   * @param {string} content - window HTML content as string
-   * @param {number} width - window width in px
-   * @param {number} height - window height in px
-   * @param {object} savedState - saved window state object
-   * @param {Window} WindowClass - window subclass specifier
+   * @param {WindowConfig} config - window configuration object
+   * @param {typeof Window} WindowClass - window class/subclass type
    * @returns {Window} window or window subclass
    */
   createWindow (
     id,
-    title,
-    content,
-    width = 400,
-    height = 300,
-    savedState = null,
-    WindowClass = Window
+    WindowClass = Window,
+    config = {}
   ) {
+
+
     // Check if window with this id already exists
     if (this.windows.has(id)) {
-      console.warn(`Window with id ${id} already exists. Skipping creation.`)
+      console.error(`Window with id ${id} already exists. Skipping creation.`)
       return this.windows.get(id)
+    }
+
+    // Check if window class is registered in windowTypes
+    if (!this.windowTypes.has(WindowClass.name)) {
+      console.error(`${WindowClass.name} class not registered in windowTypes`)
+      
+      // Check for window class inheritence
+      if (WindowClass.prototype instanceof Window) {
+        console.warn('Window class is a subclass of Window - Registering new Type')
+        this.windowTypes.set(WindowClass, {
+          width: config.width || 600,
+          height: config.height || 400,
+          title: config.title || '',
+          icon: config.icon || '',
+          styles: config.styles || {},
+          events: config.events || {},
+          savedstate: config.savedstate || {}
+        })
+      } else {
+        console.error('Window class is not a subclass of Window - Using default Window class.')
+        WindowClass = Window
+      }
+
+    } else {
+      // Merge config with default config - if attributes are missing, use default
+      const defaultconfig = this.windowTypes.get(WindowClass)
+      for (const defaultKey in defaultconfig) {
+        config[defaultKey] = config[defaultKey] || defaultconfig[defaultKey]
+      }
     }
 
     let window = null
 
-    switch (WindowClass) {
-      case Popup:
-        window = new Popup(id, 
-                          content,
-                          width,
-                          height,
-                          savedState
-                        )
-        break
+    window = new WindowClass(id, config)
 
-      case ChatWindow:
-        window = new ChatWindow(id,
-                                width, 
-                                height, 
-                                'default', 
-                                savedState
-                              )
-        window.on('toggleEmojis', () => this.toggleEmojis(window))
-        window.on('usernameChanged', (username) => {this.username = username})
-        break
-
-      case EmojiSelector:
-        window = new EmojiSelector(id, savedState)
-        break
-
-      case null:
-      case Window:
-      default:
-        window = new Window(id,
-                            title, 
-                            content, 
-                            width, 
-                            height, 
-                            savedState
-                          )
-    }
+    Object.entries(config.events).forEach(([event, handler]) => {
+      window.on(event, handler)
+    })
 
     // Set up event listeners
     window.on('close', () => this.removeWindow(window))
@@ -379,13 +371,7 @@ export default class Environment {
     window.on('minimize', () => this.saveState())
     window.on('drag', () => this.saveState())
     window.on('dragEnd', () => this.saveState())
-    window.on('popup', (data) => this.newWindow('Popup',
-                                                data.content, 
-                                                data.width, 
-                                                data.height, 
-                                                null, 
-                                                Popup
-                                              ))
+    window.on('popup', (data) => this.newWindow(`${crypto.randomUUID()}-${id}`, data, Popup))
 
     this.windows.set(window.id, window)
     this.environment.appendChild(window.element)

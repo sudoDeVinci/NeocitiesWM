@@ -1,8 +1,8 @@
 import Window from './window.js'
 
 export default class EmojiSelector extends Window {
-  constructor (id, savedState = null) {
-    super(id, 'Emoji Selector', '', 400, 450, savedState)
+  constructor (id, config) {
+    super(id, config)
 
     // Common emoji categories with sample emojis
     this.categories = {

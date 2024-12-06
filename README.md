@@ -13,8 +13,8 @@ const env = new Environment(true);
 ### Custom Window Types
 We want users to be able to create custom window types with custom events emitted and handled by the environment.
 - [ ] Environment.NewWindowType(CustomWindowType, events):
-    - [ ] Change existing window definitions to accept argument in object form rather than separately.
-    - [ ] Change Environment class to track Window Subclass types in a HashMap; keys is the type, value is an object of custom events and their callbacks.
+    - [x] Change existing window definitions to accept argument in object form rather than separately.
+    - [x] Change Environment class to track Window Subclass types in a HashMap; keys is the type, value is an object of custom events and their callbacks.
 
 ```Javascript
 /**

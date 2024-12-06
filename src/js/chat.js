@@ -4,24 +4,18 @@ export default class ChatWindow extends Window {
   /**
    *
    * @param {string} id - The uuid of the window.
-   * @param {number} width - Window width.
-   * @param {number} height - Window height.
-   * @param {string} channel - The chat channel to connect to.
-   * @param {object} savedState - The saved state of the window attributes.
+   * @param {WindowConfig} config - The configuration object for the window.
    */
   constructor (
     id,
-    width = 320,
-    height = 600,
-    channel = 'default',
-    savedState = null
+    config
   ) {
-    const title = `Chat - ${channel}`
-    const content = '<div class="chat-container"></div>'
-    super(id, title, content, width, height, savedState)
+    config.title = `Chat - ${config.channel}`
+    config.content = '<div class="chat-container"></div>'
+    super(id, config)
 
-    this.username = null
-    this.channel = channel
+    this.username = config.username || this.getUsername()
+    this.channel = config.channel || 'general'
     this.messages = this.loadCachedMessages() || []
     this.setupChatUI()
     this.connectWebSocket()
@@ -30,10 +24,10 @@ export default class ChatWindow extends Window {
       for (const message of this.messages) {
         if (message.type === 'message') this.displayMessage(message)
       }
-    }, 500)
+    }, 250)
 
-    this.senderColor = localStorage.getItem('senderColor') || '#e3f2fd'
-    this.receiverColor = localStorage.getItem('receiverColor') || '#f5f5f5'
+    this.senderColor = config.senderColor || localStorage.getItem('senderColor') || '#e3f2fd'
+    this.receiverColor = config.receiverColor || localStorage.getItem('receiverColor') || '#f5f5f5'
     this.addColorPickers()
   }
 

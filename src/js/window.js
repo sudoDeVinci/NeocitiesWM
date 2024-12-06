@@ -1,4 +1,17 @@
 /**
+ * @typedef {Object} WindowConfig
+ * @property {number} width - Default window width
+ * @property {number} height - Default window height
+ * @property {string} icon - Icon path
+ * @property {string} title - Window title
+ * @property {string} content - Window content
+ * @property {Object} [styles] - Styles for the window
+ * @property {Object.<string, Function[]>} [events] - Event listeners & callbacks
+ * @property {Object} [savedState] - Saved window state
+ */
+
+
+/**
  * Base event emitter class for handling window events
  */
 class EventEmitter {
@@ -146,27 +159,18 @@ export default class Window extends EventEmitter {
   width = null
 
   /**
-   * Create a new Window instance
-   * @param {string} id - Unique identifier for the window
-   * @param {string} title - Window title displayed in the title bar
-   * @param {string} content - HTML content to display in the window
-   * @param {number} width - Initial window width in pixels
-   * @param {number} height - Initial window height in pixels
-   * @param {object} savedState - Previously saved window state
-   * @param {number} savedState.width - Saved window width
-   * @param {number} savedState.height - Saved window height
-   * @param {number} savedState.x - Saved X position
-   * @param {number} savedState.y - Saved Y position
-   * @param {boolean} savedState.isMinimized - Saved minimize state
-   * @param {number} savedState.zIndex - Saved z-index
+   * Create a new Window instance with the provided configuration.
+   * @param {string} id - The window identifier
+   * @param {WindowConfig} config - The window configuration
    */
-  constructor (id, title, content, width = 400, height = 300, savedState = null) {
+  constructor (id, config) {
     super()
     this.id = id
-    this.title = title
-    this.content = content
+    this.title = config.title
+    this.content = config.content
 
-    if (savedState) {
+    if (config.savedState) {
+      const savedState = config.savedState
       this.width = savedState.width
       this.height = savedState.height
       this.x = savedState.x
@@ -174,22 +178,22 @@ export default class Window extends EventEmitter {
       this.isMinimized = savedState.isMinimized
       this.zIndex = savedState.zIndex
     } else {
-      this.width = width
-      this.height = height
+      this.width = config.width
+      this.height = config.height
 
       this.x = Math.min(
-        Math.max(0, Math.random() * (window.innerWidth - width - 100)),
-        window.innerWidth - width - 100
+        Math.max(0, Math.random() * (window.innerWidth - this.width - 100)),
+        window.innerWidth - this.width - 100
       )
       this.y = Math.min(
-        Math.max(50, Math.random() * (window.innerHeight - height - 100)),
-        window.innerHeight - height
+        Math.max(50, Math.random() * (window.innerHeight - this.height - 100)),
+        window.innerHeight - this.height
       )
 
       this.isMinimized = false
-      this.background_color = '#FAF9F6'
-      this.titlebar_background_color = '#333'
-      this.titlebar_text_color = '#fff'
+      this.background_color = config.styles.background_color || '#FAF9F6'
+      this.titlebar_background_color = config.styles.titlebar_background_color || '#333'
+      this.titlebar_text_color = config.styles.title || '#fff'
 
     }
 
@@ -205,11 +209,11 @@ export default class Window extends EventEmitter {
     // Adjust initial positioning to ensure it's within viewport
     this.x = Math.min(
       Math.max(0, this.x),
-      Math.max(0, window.innerWidth - width)
+      Math.max(0, window.innerWidth -this.width)
     )
     this.y = Math.min(
       Math.max(0, this.y),
-      Math.max(0, window.innerHeight - height)
+      Math.max(0, window.innerHeight - this.height)
     )
 
     if (this.isMinimized) {
