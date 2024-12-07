@@ -350,11 +350,13 @@ export default class Environment {
 
     } else {
       // Merge config with default config - if attributes are missing, use default
-      const defaultconfig = this.windowTypes.get(WindowClass)
+      const defaultconfig = this.windowTypes.get(WindowClass.name)
       for (const defaultKey in defaultconfig) {
         config[defaultKey] = config[defaultKey] || defaultconfig[defaultKey]
       }
     }
+
+    //console.log('Creating window:', id, WindowClass.name, config)
 
     let window = null
 

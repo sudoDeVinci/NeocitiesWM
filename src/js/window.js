@@ -193,8 +193,7 @@ export default class Window extends EventEmitter {
       this.isMinimized = false
       this.background_color = config.styles.background_color || '#FAF9F6'
       this.titlebar_background_color = config.styles.titlebar_background_color || '#333'
-      this.titlebar_text_color = config.styles.title || '#fff'
-
+      this.titlebar_text_color = config.styles.titlebar_text_color || '#fff'
     }
 
     // Initialize drag state
